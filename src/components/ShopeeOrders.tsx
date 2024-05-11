@@ -92,6 +92,19 @@ export default function ShopeeOrders() {
   return (
     <form className="flex flex-col gap-3" onSubmit={onSubmit}>
       <div>
+        <span className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          This is tools for get data orders from Shopee.
+          <a
+            href="https://excited-shoe-10d.notion.site/-4cce7ba755f8477d9319f65a8d645fce"
+            className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+            target="_blank"
+          >
+            Learn more »
+          </a>
+          .
+        </span>
+      </div>
+      <div>
         <div className="flex flex-row gap-4">
           <div>
             <div className="mb-2 block">

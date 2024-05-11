@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export default function Notion() {
   const [input, setInput] = useState({
     notionApiKey: "",
-    notionPageId: "",
+    notionPageUrl: "",
   });
   const [result, setResult] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
@@ -31,10 +31,11 @@ export default function Notion() {
   }, []);
 
   const onSubmit = useCallback(async () => {
-    const { notionApiKey, notionPageId } = input;
+    const { notionApiKey, notionPageUrl } = input;
 
     await toast.promise(
       new Promise((resolve, reject) => {
+        const notionPageId = notionPageUrl.split("-").pop();
         fetch("/api/notion/orders", {
           method: "POST",
           body: JSON.stringify({
@@ -60,17 +61,28 @@ export default function Notion() {
     <div className="flex flex-col gap-3">
       <div>
         <div className="mb-2 block">
-          <Label htmlFor="notionPageId" value="Page Id *" />
+          <Label htmlFor="notionPageUrl" value="Page Url *" />
         </div>
         <TextInput
-          id="notionPageId"
-          name="notionPageId"
+          id="notionPageUrl"
+          name="notionPageUrl"
           type="text"
-          placeholder="Please enter your Notion Page Id..."
-          value={input.notionPageId}
+          placeholder="Please enter your Notion Page Url..."
+          value={input.notionPageUrl}
           onChange={onChange}
-          helperText="Notion is only allowed to use data from an
-      authorized page. Please enter Notion Page Id allowed."
+          helperText={
+            <span>
+              Notion is only allowed to use data from an authorized page.
+              <a
+                href="https://excited-shoe-10d.notion.site/-070be3aafa724122bfb8c395942d36e2"
+                className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+                target="_blank"
+              >
+                Learn more »
+              </a>
+              .
+            </span>
+          }
         />
       </div>
       <div>
@@ -89,10 +101,11 @@ export default function Notion() {
               The application requires permission to {`"read" and "write"`} to
               your account in Notion.
               <a
-                href="https://www.notion.so/my-integrations"
+                href="https://excited-shoe-10d.notion.site/-d9fe212e5bb443469eb313bb7d3ae8655"
                 className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
+                target="_blank"
               >
-                Get here »
+                Learn more »
               </a>
               .
             </span>

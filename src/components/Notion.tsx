@@ -33,6 +33,10 @@ export default function Notion() {
   const onSubmit = useCallback(async () => {
     const { notionApiKey, notionPageUrl } = input;
 
+    if (!notionApiKey || !notionPageUrl) {
+      return;
+    }
+
     await toast.promise(
       new Promise((resolve, reject) => {
         const notionPageId = notionPageUrl.split("-").pop();

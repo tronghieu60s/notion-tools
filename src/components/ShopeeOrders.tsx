@@ -1,4 +1,4 @@
-import { Button, Label, TextInput, Textarea } from "flowbite-react";
+import { Button, Checkbox, Label, TextInput, Textarea } from "flowbite-react";
 import React, {
   ChangeEvent,
   FormEvent,
@@ -15,6 +15,7 @@ export default function ShopeeOrders() {
     numberPerRequests: 2,
   });
   const [result, setResult] = useState("");
+  const [obfuscateCode, setObfuscateCode] = useState(true);
   const [maximumRecords, setMaximumRecords] = useState(0);
 
   useEffect(() => {
@@ -34,46 +35,49 @@ export default function ShopeeOrders() {
       const numberOfRequests = Math.floor(input.numberOfRequests);
       const numberPerRequests = Math.floor(input.numberPerRequests);
 
-      setResult(
-        `${JavaScriptObfuscator.obfuscate(
-          `
-          const api =
-            "https://shopee.vn/api/v4/order/get_all_order_and_checkout_list?limit=20&offset=";
-          const urls = Array.from({ length: 1000 }, (_, i) => api + (i * 20 + ${offsetRequests}));
+      const codeRequestJs = `
+        const api =
+          "https://shopee.vn/api/v4/order/get_all_order_and_checkout_list?limit=20&offset=";
+        const urls = Array.from({ length: 1000 }, (_, i) => api + (i * 20 + ${offsetRequests}));
 
-          const rawData = [];
+        const rawData = [];
 
-          let index = 0;
-          let isStop = false;
-          let chunkData = [];
-          const chunkSize = ${numberPerRequests};
-          do {
-            chunkData = await Promise.all(
-              urls
-                .slice(index, index + chunkSize)
-                .map((url) => fetch(url).then((res) => res.json()))
-            );
-
-            if (index === ${
-              numberOfRequests - 1
-            } || chunkData.every((data) => data.data.next_offset === -1)) {
-              isStop = true;
-            }
-
-            rawData.push(...chunkData);
-
-            index += 1;
-          } while (!isStop);
-
-          console.log(
-            rawData
-              .map((data) => data.data.order_data.details_list)
-              .filter((data) => data)
-              .flat()
+        let index = 0;
+        let isStop = false;
+        let chunkData = [];
+        const chunkSize = ${numberPerRequests};
+        do {
+          chunkData = await Promise.all(
+            urls
+              .slice(index, index + chunkSize)
+              .map((url) => fetch(url).then((res) => res.json()))
           );
-          `,
-          { compact: true }
-        )}`
+
+          if (index === ${
+            numberOfRequests - 1
+          } || chunkData.every((data) => data.data.next_offset === -1)) {
+            isStop = true;
+          }
+
+          rawData.push(...chunkData);
+
+          index += 1;
+        } while (!isStop);
+
+        console.log(
+          rawData
+            .map((data) => data.data.order_data.details_list)
+            .filter((data) => data)
+            .flat()
+        );
+      `;
+
+      setResult(
+        obfuscateCode
+          ? `${JavaScriptObfuscator.obfuscate(codeRequestJs, {
+              compact: true,
+            })}`
+          : codeRequestJs
       );
     },
     [
@@ -81,6 +85,7 @@ export default function ShopeeOrders() {
       input.numberPerRequests,
       input.offsetRequests,
       maximumRecords,
+      obfuscateCode,
     ]
   );
 
@@ -146,6 +151,16 @@ export default function ShopeeOrders() {
         <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Maximum orders: {maximumRecords} records.
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="obfuscateCode"
+          checked={obfuscateCode}
+          onChange={(event) => setObfuscateCode(event.target.checked)}
+        />
+        <Label htmlFor="obfuscateCode" className="flex">
+          Obfuscate Code
+        </Label>
       </div>
       <Button type="submit" disabled={maximumRecords >= 100}>
         Get Code

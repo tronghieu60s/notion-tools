@@ -1,17 +1,19 @@
 import { Client } from "@notionhq/client";
 import moment from "moment";
 import type { NextApiRequest, NextApiResponse } from "next";
+import NextCors from "nextjs-cors";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  await NextCors(req, res, { methods: ["POST"], origin: "*" });
+
   if (req.method === "POST") {
     try {
       const { ordersRaw, notionApiKey, notionPageId } = JSON.parse(req.body);
 
-      const orderData = JSON.parse(ordersRaw);
-      const orderItems = orderData.map((order: any) => ({
+      const orderItems = ordersRaw.map((order: any) => ({
         ctime: order.shipping?.tracking_info.ctime,
         order_id: order.info_card.order_id,
         final_total: order.info_card.final_total,

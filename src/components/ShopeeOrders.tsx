@@ -1,14 +1,34 @@
-import { Button, Checkbox, Label, TextInput, Textarea } from "flowbite-react";
-import React, {
+import {
+  Button,
+  Checkbox,
+  Flowbite,
+  Label,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
+import { Copy, MagicStar } from "iconsax-react";
+import * as JavaScriptObfuscator from "javascript-obfuscator";
+import {
   ChangeEvent,
   FormEvent,
   useCallback,
   useEffect,
   useState,
 } from "react";
-import * as JavaScriptObfuscator from "javascript-obfuscator";
+import toast from "react-hot-toast";
 
-export default function ShopeeOrders() {
+type Props = {
+  notionInput: {
+    notionApiKey: string;
+    notionPageUrl: string;
+  };
+};
+
+export default function ShopeeOrders(props: Props) {
+  const {
+    notionInput: { notionApiKey, notionPageUrl },
+  } = props;
+
   const [input, setInput] = useState({
     offsetRequests: 0,
     numberOfRequests: 1,
@@ -31,6 +51,10 @@ export default function ShopeeOrders() {
         return;
       }
 
+      const host = window.location.href;
+      const apiRequest = `${host}api/notion/orders`;
+
+      const notionPageId = notionPageUrl.split("-").pop();
       const offsetRequests = Math.floor(input.offsetRequests);
       const numberOfRequests = Math.floor(input.numberOfRequests);
       const numberPerRequests = Math.floor(input.numberPerRequests);
@@ -64,12 +88,28 @@ export default function ShopeeOrders() {
           index += 1;
         } while (!isStop);
 
-        console.log(
-          rawData
-            .map((data) => data.data.order_data.details_list)
-            .filter((data) => data)
-            .flat()
-        );
+        const ordersRaw = rawData
+          .map((data) => data.data.order_data.details_list)
+          .filter((data) => data)
+          .flat()
+
+        await fetch("${apiRequest}", {
+          method: "POST",
+          body: JSON.stringify({
+            ordersRaw,
+            notionApiKey: "${notionApiKey}",
+            notionPageId: "${notionPageId}",
+          }),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.message === "OK") {
+              console.info(res.message);
+              return;
+            }
+            console.error(res.message);
+          })
+          .catch((res) => console.error(res));
       `;
 
       setResult(
@@ -85,6 +125,8 @@ export default function ShopeeOrders() {
       input.numberPerRequests,
       input.offsetRequests,
       maximumRecords,
+      notionApiKey,
+      notionPageUrl,
       obfuscateCode,
     ]
   );
@@ -93,6 +135,11 @@ export default function ShopeeOrders() {
     const { name, value } = event.target;
     setInput((prev) => ({ ...prev, [name]: value }));
   }, []);
+
+  const onCopyToClipboard = useCallback(() => {
+    navigator.clipboard.writeText(result);
+    toast.success("Copied to Clipboard");
+  }, [result]);
 
   return (
     <form className="flex flex-col gap-3" onSubmit={onSubmit}>
@@ -162,9 +209,18 @@ export default function ShopeeOrders() {
           Obfuscate Code
         </Label>
       </div>
-      <Button type="submit" disabled={maximumRecords >= 100}>
-        Get Code
-      </Button>
+      <div className="flex justify-between">
+        <Button type="submit" disabled={maximumRecords >= 100}>
+          <MagicStar size={18} className="mr-2" />
+          Get Code
+        </Button>
+        {result && (
+          <Button type="button" onClick={onCopyToClipboard}>
+            <Copy size={18} className="mr-2" />
+            Copy
+          </Button>
+        )}
+      </div>
       <Textarea
         id="result"
         rows={10}

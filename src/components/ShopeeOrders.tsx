@@ -1,7 +1,6 @@
 import {
   Button,
   Checkbox,
-  Flowbite,
   Label,
   TextInput,
   Textarea,
@@ -52,7 +51,7 @@ export default function ShopeeOrders(props: Props) {
       }
 
       const host = window.location.href;
-      const apiRequest = `${host}api/notion/orders`;
+      const apiRequest = `${host}api/shopee/orders`;
 
       const notionPageId = notionPageUrl.split("-").pop();
       const offsetRequests = Math.floor(input.offsetRequests);
@@ -60,6 +59,9 @@ export default function ShopeeOrders(props: Props) {
       const numberPerRequests = Math.floor(input.numberPerRequests);
 
       const codeRequestJs = `
+        console.clear();
+        console.info("Get data...");
+
         const api =
           "https://shopee.vn/api/v4/order/get_all_order_and_checkout_list?limit=20&offset=";
         const urls = Array.from({ length: 1000 }, (_, i) => api + (i * 20 + ${offsetRequests}));
@@ -91,7 +93,10 @@ export default function ShopeeOrders(props: Props) {
         const ordersRaw = rawData
           .map((data) => data.data.order_data.details_list)
           .filter((data) => data)
-          .flat()
+          .flat();
+
+        console.info(ordersRaw);
+        console.info("Add data...");
 
         await fetch("${apiRequest}", {
           method: "POST",
@@ -104,7 +109,7 @@ export default function ShopeeOrders(props: Props) {
           .then((res) => res.json())
           .then((res) => {
             if (res.message === "OK") {
-              console.info(res.message);
+              console.info("Success!");
               return;
             }
             console.error(res.message);
@@ -226,7 +231,7 @@ export default function ShopeeOrders(props: Props) {
         rows={10}
         value={result}
         onChange={(event) => setResult(event.target.value)}
-        placeholder="Paste code here..."
+        placeholder="Your code here..."
         disabled={maximumRecords >= 100}
       />
     </form>

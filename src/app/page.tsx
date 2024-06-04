@@ -1,5 +1,6 @@
 "use client";
 
+import ShopeeFlashSale from "@/components/ShopeeFlashSale";
 import ShopeeOrders from "@/components/ShopeeOrders";
 import { Accordion, Label, TextInput } from "flowbite-react";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
@@ -105,13 +106,21 @@ export default function Home() {
           </h3>
         </div>
         <div>
-          <Accordion>
+          <Accordion collapseAll>
             <Accordion.Panel>
               <Accordion.Title className="text-sm p-4">
                 📄 Shopee Orders
               </Accordion.Title>
               <Accordion.Content>
                 <ShopeeOrders notionInput={input} />
+              </Accordion.Content>
+            </Accordion.Panel>
+            <Accordion.Panel>
+              <Accordion.Title className="text-sm p-4">
+                ⚡ Shopee Flash Sale
+              </Accordion.Title>
+              <Accordion.Content>
+                <ShopeeFlashSale notionInput={input} />
               </Accordion.Content>
             </Accordion.Panel>
           </Accordion>

@@ -7,7 +7,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  await NextCors(req, res, { methods: ["POST"], origin: "*" });
+  await NextCors(req, res, {
+    methods: ["POST"],
+    origin: ["http://shopee.vn", "https://shopee.vn"],
+  });
 
   if (req.method === "POST") {
     try {

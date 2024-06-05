@@ -1,4 +1,11 @@
-import { Button, Checkbox, Label, TextInput, Textarea } from "flowbite-react";
+import {
+  Button,
+  Checkbox,
+  Label,
+  ListGroup,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
 import { Copy, MagicStar } from "iconsax-react";
 import * as JavaScriptObfuscator from "javascript-obfuscator";
 import {
@@ -25,14 +32,43 @@ export default function ShopeeFlashSale(props: Props) {
   const [result, setResult] = useState("");
   const [obfuscateCode, setObfuscateCode] = useState(true);
 
+  const [flashSale, setFlashSale] = useState([]);
+
+  const getData = useCallback(async () => {
+    if (!notionApiKey || !notionPageUrl) {
+      return;
+    }
+
+    const apiSession = "/api/shopee/flash-sale/sessions";
+    const notionPageId = notionPageUrl.split("-").pop() || "";
+
+    const queryParams = new URLSearchParams();
+    queryParams.append("notionApiKey", notionApiKey);
+    queryParams.append("notionPageId", notionPageId);
+
+    const queryString = queryParams.toString();
+
+    const sessions = await fetch(`${apiSession}?${queryString}`).then((res) =>
+      res.json()
+    );
+    setFlashSale(sessions.data);
+  }, [notionApiKey, notionPageUrl]);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
   const onSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      const host = window.location.href;
-      const apiRequest = `${host}api/shopee/flash-sale`;
+      if (!notionApiKey || !notionPageUrl) {
+        toast.error("Please input Notion.");
+        return;
+      }
 
-      const notionPageId = notionPageUrl.split("-").pop();
+      const host = window.location.href;
+      const notionPageId = notionPageUrl.split("-").pop() || "";
 
       const codeRequestJs = `
         console.clear();
@@ -53,10 +89,10 @@ export default function ShopeeFlashSale(props: Props) {
           startTime: session.start_time,
         }));
 
-        console.log(endTime, sessions);
+        console.log(sessionsRaw);
         console.info("Add data...");
 
-        await fetch("${apiRequest}", {
+        await fetch("${host}api/shopee/flash-sale/sessions", {
           method: "POST",
           body: JSON.stringify({
             sessionsRaw,
@@ -135,6 +171,15 @@ export default function ShopeeFlashSale(props: Props) {
         onChange={(event) => setResult(event.target.value)}
         placeholder="Your code here..."
       />
+      {flashSale.length > 0 && (
+        <div>
+          <ListGroup className="w-48">
+            {flashSale.map((sale) => (
+              <ListGroup.Item key={sale}>{sale}</ListGroup.Item>
+            ))}
+          </ListGroup>
+        </div>
+      )}
     </form>
   );
 }

@@ -12,8 +12,8 @@ export default async function handler(
     origin: ["http://shopee.vn", "https://shopee.vn"],
   });
 
-  if (req.method === "POST") {
-    try {
+  try {
+    if (req.method === "POST") {
       const { ordersRaw, notionApiKey, notionPageId } = JSON.parse(req.body);
 
       const orderItems = ordersRaw.map((order: any) => ({
@@ -45,7 +45,7 @@ export default async function handler(
 
       let pageOrderId = "";
       if (pageOrder) {
-        pageOrderId = pageOrder?.id;
+        pageOrderId = pageOrder.id;
       } else {
         const newDatabase = await notion.databases.create({
           icon: { type: "emoji", emoji: "📑" },
@@ -78,7 +78,7 @@ export default async function handler(
           );
 
           const orderTime = orderItem.ctime
-            ? moment(new Date(orderItem.ctime * 1000)).format("MM.YYYY")
+            ? moment(orderItem.ctime * 1000).format("MM.YYYY")
             : "#";
           const orderName = `${orderTime}-${orderItem.products.join("-")}`;
 
@@ -162,8 +162,8 @@ export default async function handler(
       );
 
       res.status(200).json({ message: "OK" });
-    } catch (error) {
-      res.status(400).json({ message: `${error}` });
     }
+  } catch (error) {
+    res.status(400).json({ message: `${error}` });
   }
 }

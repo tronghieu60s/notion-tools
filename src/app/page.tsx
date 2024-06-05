@@ -31,7 +31,7 @@ export default function Home() {
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setInput((prev) => ({ ...prev, [name]: value }));
+    setInput((prev) => ({ ...prev, [name]: value.trim() }));
   }, []);
 
   return (

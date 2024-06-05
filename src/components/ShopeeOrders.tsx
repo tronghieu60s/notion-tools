@@ -50,10 +50,14 @@ export default function ShopeeOrders(props: Props) {
         return;
       }
 
-      const host = window.location.href;
-      const apiRequest = `${host}api/shopee/orders`;
+      if (!notionApiKey || !notionPageUrl) {
+        toast.error("Please input Notion.")
+        return;
+      }
 
-      const notionPageId = notionPageUrl.split("-").pop();
+      const host = window.location.href;
+      const notionPageId = notionPageUrl.split("-").pop() || '';
+
       const offsetRequests = Math.floor(input.offsetRequests);
       const numberOfRequests = Math.floor(input.numberOfRequests);
       const numberPerRequests = Math.floor(input.numberPerRequests);
@@ -98,7 +102,7 @@ export default function ShopeeOrders(props: Props) {
         console.info(ordersRaw);
         console.info("Add data...");
 
-        await fetch("${apiRequest}", {
+        await fetch("${host}api/shopee/orders", {
           method: "POST",
           body: JSON.stringify({
             ordersRaw,

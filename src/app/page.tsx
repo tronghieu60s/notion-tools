@@ -2,7 +2,7 @@
 
 import ShopeeFlashSale from "@/components/ShopeeFlashSale";
 import ShopeeOrders from "@/components/ShopeeOrders";
-import { Accordion, Label, TextInput } from "flowbite-react";
+import { Label, Tabs, TextInput } from "flowbite-react";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 
@@ -84,7 +84,7 @@ export default function Home() {
               helperText={
                 <span>
                   The application requires permission to {`"read" and "write"`}{" "}
-                  to your account in Notion.
+                  to your pages.
                   <a
                     href="https://excited-shoe-10d.notion.site/-d9fe212e5bb443469eb313bb7d3ae865"
                     className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
@@ -100,31 +100,14 @@ export default function Home() {
         </div>
       </div>
       <div className="w-8/12 flex flex-col gap-5">
-        <div>
-          <h3 className="text-2xl font-medium text-gray-900 dark:text-white">
-            Shopee
-          </h3>
-        </div>
-        <div>
-          <Accordion collapseAll>
-            <Accordion.Panel>
-              <Accordion.Title className="text-sm p-4">
-                📄 Shopee Orders
-              </Accordion.Title>
-              <Accordion.Content>
-                <ShopeeOrders notionInput={input} />
-              </Accordion.Content>
-            </Accordion.Panel>
-            <Accordion.Panel>
-              <Accordion.Title className="text-sm p-4">
-                ⚡ Shopee Flash Sale
-              </Accordion.Title>
-              <Accordion.Content>
-                <ShopeeFlashSale notionInput={input} />
-              </Accordion.Content>
-            </Accordion.Panel>
-          </Accordion>
-        </div>
+        <Tabs style="default">
+          <Tabs.Item title="Shopee Orders">
+            <ShopeeOrders notionInput={input} />
+          </Tabs.Item>
+          <Tabs.Item title="Shopee Flash Sale">
+            <ShopeeFlashSale notionInput={input} />
+          </Tabs.Item>
+        </Tabs>
       </div>
     </div>
   );

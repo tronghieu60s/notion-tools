@@ -1,20 +1,7 @@
-import {
-  Button,
-  Checkbox,
-  Label,
-  ListGroup,
-  TextInput,
-  Textarea,
-} from "flowbite-react";
+import { Button, Checkbox, Label, ListGroup, Textarea } from "flowbite-react";
 import { Copy, MagicStar } from "iconsax-react";
 import * as JavaScriptObfuscator from "javascript-obfuscator";
-import {
-  ChangeEvent,
-  FormEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 type Props = {
@@ -22,6 +9,11 @@ type Props = {
     notionApiKey: string;
     notionPageUrl: string;
   };
+};
+
+type FlashSale = {
+  id: string;
+  name: string;
 };
 
 export default function ShopeeFlashSale(props: Props) {
@@ -32,7 +24,9 @@ export default function ShopeeFlashSale(props: Props) {
   const [result, setResult] = useState("");
   const [obfuscateCode, setObfuscateCode] = useState(true);
 
-  const [flashSale, setFlashSale] = useState([]);
+  const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
+  const [flashSalesResult, setFlashSalesResult] = useState("");
+  const [flashSalesSelected, setFlashSalesSelected] = useState("");
 
   const getData = useCallback(async () => {
     if (!notionApiKey || !notionPageUrl) {
@@ -51,12 +45,83 @@ export default function ShopeeFlashSale(props: Props) {
     const sessions = await fetch(`${apiSession}?${queryString}`).then((res) =>
       res.json()
     );
-    setFlashSale(sessions.data);
+    setFlashSales(sessions.data);
   }, [notionApiKey, notionPageUrl]);
 
   useEffect(() => {
     getData();
   }, [getData]);
+
+  useEffect(() => {
+    if (flashSalesSelected) {
+      const host = window.location.href;
+      const notionPageId = notionPageUrl.split("-").pop() || "";
+
+      const codeRequestJs = `
+        console.clear();
+        console.info("Get data...");
+        
+        const apiPromotion =
+          "https://shopee.vn/api/v4/flash_sale/get_all_itemids?promotionid=${flashSalesSelected}";
+        const responsePromotions = await fetch(apiPromotion).then((res) => res.json());
+        
+        if (!responsePromotions.data) {
+          console.error("Cannot get data.");
+        }
+        
+        const chunk = (arr, size) => {
+          const chunked = [];
+          for (let i = 0; i < arr.length; i += size) {
+            const chunk = arr.slice(i, i + size);
+            chunked.push(chunk);
+          }
+          return chunked;
+        };
+        
+        const productIds = responsePromotions.data.item_brief_list.map(
+          (item) => item.itemid
+        );
+        const productIdsChunks = chunk(productIds, 50).slice(0, 3);
+        
+        const products = await Promise.all(
+          productIdsChunks.map(async (productIdsChunk) =>
+            fetch("https://shopee.vn/api/v4/flash_sale/flash_sale_batch_get_items", {
+              method: "POST",
+              body: JSON.stringify({
+                limit: 50,
+                itemids: productIdsChunk,
+                categoryid: 0,
+                promotionid: ${flashSalesSelected},
+                with_dp_items: true,
+              }),
+              headers: { "Content-Type": "application/json" },
+            })
+              .then((res) => res.json())
+              .then((res) => res.data.items)
+          )
+        );
+
+        const productsRaw = products.flat().map((product) => ({
+          id: product.itemid,
+          image: "https://down-vn.img.susercontent.com/file/" + product?.image,
+          price: product.price / 100000,
+          priceHidden: product?.hidden_price_display || '',
+          ratingStars: Number(product.item_rating?.rating_star?.toFixed(2) || 0)
+        }));
+
+        console.log(productsRaw);
+        console.info("Add data...");
+      `;
+
+      setFlashSalesResult(
+        obfuscateCode
+          ? `${JavaScriptObfuscator.obfuscate(codeRequestJs, {
+              compact: true,
+            })}`
+          : codeRequestJs
+      );
+    }
+  }, [flashSalesSelected, notionApiKey, notionPageUrl, obfuscateCode]);
 
   const onSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -73,14 +138,14 @@ export default function ShopeeFlashSale(props: Props) {
       const codeRequestJs = `
         console.clear();
         console.info("Get data...");
-
+        
         const apiSession = "https://shopee.vn/api/v4/flash_sale/get_all_sessions";
         const responseSessions = await fetch(apiSession).then((res) => res.json());
-
+        
         if (!responseSessions.data) {
           console.error("Cannot get data.");
         }
-
+        
         const endTime = responseSessions.data.current_session_end_time;
         const sessionsRaw = responseSessions.data.sessions.map((session) => ({
           id: session.promotionid,
@@ -88,10 +153,10 @@ export default function ShopeeFlashSale(props: Props) {
           endTime: session.end_time,
           startTime: session.start_time,
         }));
-
+        
         console.log(sessionsRaw);
         console.info("Add data...");
-
+        
         await fetch("${host}api/shopee/flash-sale/sessions", {
           method: "POST",
           body: JSON.stringify({
@@ -122,16 +187,16 @@ export default function ShopeeFlashSale(props: Props) {
     [notionApiKey, notionPageUrl, obfuscateCode]
   );
 
-  const onCopyToClipboard = useCallback(() => {
-    navigator.clipboard.writeText(result);
+  const onCopyToClipboard = useCallback((value: string) => {
+    navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard");
-  }, [result]);
+  }, []);
 
   return (
     <form className="flex flex-col gap-3" onSubmit={onSubmit}>
       <div>
         <span className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          This is tools for get data flash sale from Shopee.
+          This is tools for get data Flash Sale from Shopee.
           <a
             href="#"
             className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
@@ -158,26 +223,45 @@ export default function ShopeeFlashSale(props: Props) {
           Get Code
         </Button>
         {result && (
-          <Button type="button" onClick={onCopyToClipboard}>
+          <Button type="button" onClick={() => onCopyToClipboard(result)}>
             <Copy size={18} className="mr-2" />
             Copy
           </Button>
         )}
       </div>
-      <Textarea
-        id="result"
-        rows={10}
-        value={result}
-        onChange={(event) => setResult(event.target.value)}
-        placeholder="Your code here..."
-      />
-      {flashSale.length > 0 && (
-        <div>
-          <ListGroup className="w-48">
-            {flashSale.map((sale) => (
-              <ListGroup.Item key={sale}>{sale}</ListGroup.Item>
+      <Textarea rows={10} value={result} placeholder="Your code here..." />
+      {flashSales.length > 0 && (
+        <div className="flex gap-5">
+          <ListGroup className="w-60">
+            {flashSales.map((flashSale) => (
+              <ListGroup.Item
+                key={flashSale.id}
+                active={flashSale.id === flashSalesSelected}
+                onClick={() => setFlashSalesSelected(flashSale.id)}
+              >
+                <div>
+                  Flash Sale
+                  <div>{flashSale.name.replace("Flash Sale", "")}</div>
+                </div>
+              </ListGroup.Item>
             ))}
           </ListGroup>
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex justify-between">
+              <span className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Using this code for get list of products Flash Sale in Shopee.
+              </span>
+              <Button type="button" onClick={() => onCopyToClipboard(flashSalesResult)}>
+                <Copy size={18} className="mr-2" />
+                Copy
+              </Button>
+            </div>
+            <Textarea
+              rows={10}
+              value={flashSalesResult}
+              placeholder="Your code here..."
+            />
+          </div>
         </div>
       )}
     </form>

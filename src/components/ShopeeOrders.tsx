@@ -145,16 +145,16 @@ export default function ShopeeOrders(props: Props) {
     setInput((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const onCopyToClipboard = useCallback(() => {
-    navigator.clipboard.writeText(result);
+  const onCopyToClipboard = useCallback((value: string) => {
+    navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard");
-  }, [result]);
+  }, []);
 
   return (
     <form className="flex flex-col gap-3" onSubmit={onSubmit}>
       <div>
         <span className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          This is tools for get data orders from Shopee.
+          This is tools for get your orders from Shopee.
           <a
             href="https://excited-shoe-10d.notion.site/-4cce7ba755f8477d9319f65a8d645fce"
             className="ml-1 font-medium text-cyan-600 hover:underline dark:text-cyan-500"
@@ -224,17 +224,15 @@ export default function ShopeeOrders(props: Props) {
           Get Code
         </Button>
         {result && (
-          <Button type="button" onClick={onCopyToClipboard}>
+          <Button type="button" onClick={() => onCopyToClipboard(result)}>
             <Copy size={18} className="mr-2" />
             Copy
           </Button>
         )}
       </div>
       <Textarea
-        id="result"
         rows={10}
         value={result}
-        onChange={(event) => setResult(event.target.value)}
         placeholder="Your code here..."
         disabled={maximumRecords >= 100}
       />

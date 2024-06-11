@@ -105,7 +105,7 @@ export default function Home() {
             <ShopeeOrders notionInput={input} />
           </Tabs.Item>
           <Tabs.Item title="Shopee Flash Sale">
-            <ShopeeFlashSale notionInput={input} />
+            {/* <ShopeeFlashSale notionInput={input} /> */}
           </Tabs.Item>
         </Tabs>
       </div>

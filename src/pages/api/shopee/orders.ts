@@ -82,7 +82,7 @@ export default async function handler(
             : "#";
           const orderName = `${orderTime}-${orderItem.products.join("-")}`;
 
-          let statusName = "";
+          let statusName = orderItem.status;
           switch (orderItem.status) {
             case "label_on_the_way":
               statusName = "Đơn hàng đang giao";

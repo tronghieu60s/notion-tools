@@ -1,17 +1,11 @@
 import { Client } from "@notionhq/client";
 import moment from "moment";
 import type { NextApiRequest, NextApiResponse } from "next";
-import NextCors from "nextjs-cors";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  await NextCors(req, res, {
-    methods: ["POST"],
-    origin: ["http://shopee.vn", "https://shopee.vn"],
-  });
-
   try {
     if (req.method === "POST") {
       const { ordersRaw, notionApiKey, notionPageId } = JSON.parse(req.body);
